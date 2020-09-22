@@ -207,11 +207,4 @@ tree_b.pred.prob = predict(tree_b, df.test, type = "prob")
 conf.matrix.tree.b = confusionMatrix(table(df.test$class, tree_b.pred.class))
 print(conf.matrix.tree.b)
 
-#________________________________________________________________________________________________________#
-# III. PODA DEL ARBOL
 
-plot(tree_b)
-summary(tree_b)
-
-summary(tree.rules)
-summary(tree_b.rules)
