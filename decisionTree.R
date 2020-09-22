@@ -43,7 +43,7 @@ columns = c("code",
 url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data"
 #url = "breast-cancer-wisconsin.data"
 df = read.csv(url, header = F, sep=",", col.names = columns)
-set.seed(20)
+
 
 # ////////////////////////////////////////////////////////////////////////////////////////////////////// #
 # ///////////////////////////////////////// # PRE-PROCESAMIENTO # ////////////////////////////////////// #
@@ -151,9 +151,21 @@ df$class = factor(
 # 
 # Para la construccion del arbol, se generan un conjunto de entrenamiento y un conjuno de prueba
 
+# Antes verificaremos la relacion en la cual esta distribuida la clase a lo largo del conjunto completo.
+set.seed(20)
+table(df$class)
+
 training.index = createDataPartition(df$class, p = 0.7)$Resample1
 df.training = df[training.index, ]
 df.test = df[-training.index, ]
+
+# Ahora verificaremos si la praticion se ha realizado correctamente, tanto para el conjunto de prueba, 
+# como para el conjunto de entrenamiento
+prop.table(table(df.training$class))
+prop.table(table(df.test$class))
+
+
+
 
 #________________________________________________________________________________________________________#
 # III. AJUSTE DEL MODELO
@@ -164,8 +176,8 @@ df.test = df[-training.index, ]
 
 tree = C5.0(class ~ ., df.training)
 tree.rules = C5.0(x = df.training[, -10], y = df.training$class, rules = T)
-tree.pred.class = predict(tree, df.test[,-10], type = "class")
-tree.pred.prob = predict(tree, df.test[,-10], type = "prob")
+tree.pred.class = predict(tree, df.test, type = "class")
+tree.pred.prob = predict(tree, df.test, type = "prob")
 
 
 tree.pred.class
@@ -177,3 +189,29 @@ conf.matrix.tree = confusionMatrix(table(df.test$class, tree.pred.class))
 print(conf.matrix.tree)
 
 head(tree.pred.prob)
+
+#________________________________________________________________________________________________________#
+# III. EVALUACION DEL MODELO
+
+plot(tree)
+summary(tree)
+
+#________________________________________________________________________________________________________#
+# III. BOOSTING
+
+tree_b = C5.0(class ~ ., df.training, trials = 5)
+tree_b.rules = C5.0(x = df.training[, -10], y = df.training$class, rules = T, trials = 5)
+tree_b.pred.class = predict(tree_b, df.test, type = "class")
+tree_b.pred.prob = predict(tree_b, df.test, type = "prob")
+
+conf.matrix.tree.b = confusionMatrix(table(df.test$class, tree_b.pred.class))
+print(conf.matrix.tree.b)
+
+#________________________________________________________________________________________________________#
+# III. PODA DEL ARBOL
+
+plot(tree_b)
+summary(tree_b)
+
+summary(tree.rules)
+summary(tree_b.rules)
